@@ -68,8 +68,8 @@ Patch8:         xulrunner-6.0-secondary-ipc.patch
 
 %endif
 
-BuildRequires:  nspr-devel >= %{nspr_version}
-BuildRequires:  nss-devel >= %{nss_version}
+#BuildRequires:  nspr-devel >= %{nspr_version}
+#BuildRequires:  nss-devel >= %{nss_version}
 BuildRequires:  cairo-devel >= %{cairo_version}
 BuildRequires:  libnotify-devel >= %{libnotify_version}
 BuildRequires:  libpng-devel
@@ -88,7 +88,7 @@ BuildRequires:  freetype-devel >= %{freetype_version}
 BuildRequires:  libXt-devel
 BuildRequires:  libXrender-devel
 BuildRequires:  hunspell-devel
-BuildRequires:  sqlite-devel >= %{sqlite_version}
+#BuildRequires:  sqlite-devel >= %{sqlite_version}
 BuildRequires:  startup-notification-devel
 BuildRequires:  alsa-lib-devel
 BuildRequires:  autoconf213
@@ -97,9 +97,9 @@ BuildRequires:  libcurl-devel
 BuildRequires:  yasm
 BuildRequires:  mesa-libGL-devel
 Requires:       mozilla-filesystem
-Requires:       nspr >= %{nspr_version}
-Requires:       nss >= %{nss_version}
-Requires:       sqlite >= %{sqlite_version}
+#Requires:       nspr >= %{nspr_version}
+#Requires:       nss >= %{nss_version}
+#Requires:       sqlite >= %{sqlite_version}
 
 AutoProv: 0
 %define _use_internal_dependency_generator 0
