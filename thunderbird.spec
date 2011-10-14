@@ -43,7 +43,7 @@ Group:          Applications/Internet
 %else
 %define tarball thunderbird-3.1rc1.source.tar.bz2
 %endif
-Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/7.0.1/source/%{tarball}
+Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/7.0.1/source/thunderbird-%{version}.source.tar.bz2
 %if %{build_langpacks}
 Source1:        thunderbird-langpacks-%{version}-20110930.tar.xz
 %endif
