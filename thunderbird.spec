@@ -338,6 +338,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %exclude %{_includedir}/%{name}-%{version}
 %exclude %{_libdir}/%{name}-devel-%{version}
 %{mozappdir}/chrome.manifest
+%{mozappdir}/lib*chk
 
 #===============================================================================
 
