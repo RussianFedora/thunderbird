@@ -34,7 +34,7 @@
 Summary:        Mozilla Thunderbird mail/newsgroup client
 Name:           thunderbird
 Version:        7.0.1
-Release:        3.el6.R
+Release:        3%{?dist}.R
 URL:            http://www.mozilla.org/projects/thunderbird/
 License:        MPLv1.1 or GPLv2+ or LGPLv2+
 Group:          Applications/Internet
@@ -346,7 +346,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 #===============================================================================
 
 %changelog
-* Fri Oct 28 2011 Arkady L. Shane <ashejn@russianfedora.ru> - 7.0.1-3.el6.R
+* Fri Oct 28 2011 Arkady L. Shane <ashejn@russianfedora.ru> - 7.0.1-3.R
 - rebuilt with system components
 - apply cairo10 patch
 
