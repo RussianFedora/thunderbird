@@ -1,8 +1,8 @@
-%define nspr_version 4.8
-%define nss_version 3.12.8
-%define cairo_version 1.8.8
+%define nspr_version 4.8.8
+%define nss_version 3.12.10
+%define cairo_version 1.10
 %define freetype_version 2.1.9
-%define sqlite_version 3.6.14
+%define sqlite_version 3.7.6
 %define libnotify_version 0.4
 %define build_langpacks 1
 %define thunderbird_app_id \{3550f703-e582-4d05-9a08-453d09bdfdc6\} 
@@ -34,7 +34,7 @@
 Summary:        Mozilla Thunderbird mail/newsgroup client
 Name:           thunderbird
 Version:        7.0.1
-Release:        2.el6.R
+Release:        3.el6.R
 URL:            http://www.mozilla.org/projects/thunderbird/
 License:        MPLv1.1 or GPLv2+ or LGPLv2+
 Group:          Applications/Internet
@@ -60,6 +60,8 @@ Patch0:         thunderbird-install-dir.patch
 Patch7:         crashreporter-remove-static.patch
 Patch8:         xulrunner-6.0-secondary-ipc.patch
 
+Patch90:	thunderbird-7.0.1-cairo10.patch
+
 %if %{official_branding}
 # Required by Mozilla Corporation
 
@@ -68,9 +70,9 @@ Patch8:         xulrunner-6.0-secondary-ipc.patch
 
 %endif
 
-#BuildRequires:  nspr-devel >= %{nspr_version}
-#BuildRequires:  nss-devel >= %{nss_version}
-BuildRequires:  cairo-devel >= %{cairo_version}
+BuildRequires:  nspr-devel >= %{nspr_version}
+BuildRequires:  nss-devel >= %{nss_version}
+BuildRequires:  cairo10-devel >= %{cairo_version}
 BuildRequires:  libnotify-devel >= %{libnotify_version}
 BuildRequires:  libpng-devel
 BuildRequires:  libjpeg-devel
@@ -97,9 +99,9 @@ BuildRequires:  libcurl-devel
 BuildRequires:  yasm
 BuildRequires:  mesa-libGL-devel
 Requires:       mozilla-filesystem
-#Requires:       nspr >= %{nspr_version}
-#Requires:       nss >= %{nss_version}
-#Requires:       sqlite >= %{sqlite_version}
+Requires:       nspr >= %{nspr_version}
+Requires:       nss >= %{nss_version}
+Requires:       sqlite >= %{sqlite_version}
 
 AutoProv: 0
 %define _use_internal_dependency_generator 0
@@ -138,6 +140,8 @@ cd mozilla
 %patch7 -p2 -b .static
 %patch8 -p2 -b .secondary-ipc
 cd ..
+
+%patch90 -p1 -b .cairo10
 
 %if %{official_branding}
 # Required by Mozilla Corporation
@@ -338,11 +342,14 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %exclude %{_includedir}/%{name}-%{version}
 %exclude %{_libdir}/%{name}-devel-%{version}
 %{mozappdir}/chrome.manifest
-%{mozappdir}/lib*chk
 
 #===============================================================================
 
 %changelog
+* Fri Oct 28 2011 Arkady L. Shane <ashejn@russianfedora.ru> - 7.0.1-3.el6.R
+- rebuilt with system components
+- apply cairo10 patch
+
 * Fri Oct 14 2011 Arkady L. Shane <ashejn@russianfedora.ru> - 7.0.1-2
 - bump release
 
