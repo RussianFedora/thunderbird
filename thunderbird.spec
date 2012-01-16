@@ -1,11 +1,13 @@
 %define nspr_version 4.8.8
-%define nss_version 3.12.10
-%define cairo_version 1.10
+%define nss_version 3.13.1
+%define cairo_version 1.8.8
 %define freetype_version 2.1.9
-%define sqlite_version 3.7.6
+%define sqlite_version 3.7.7.1
 %define libnotify_version 0.4
 %define build_langpacks 1
 %define thunderbird_app_id \{3550f703-e582-4d05-9a08-453d09bdfdc6\} 
+
+%define system_sqlite 0
 
 # The tarball is pretty inconsistent with directory structure.
 # Sometimes there is a top level directory.  That goes here.
@@ -22,30 +24,23 @@
 %define enable_mozilla_crashreporter 0
 %endif
 
-%if 0%{?fedora} >= 16
-# Disable mozilla crash reporter temporary for rawhide because new libcurl-devel
-# does not include curl/types.h file which is required by google breakpad 
-# Issue has been reported to: http://code.google.com/p/google-breakpad/issues/detail?id=431
-%define enable_mozilla_crashreporter 0
-%endif
-
 %define mozappdir         %{_libdir}/%{name}
 
 Summary:        Mozilla Thunderbird mail/newsgroup client
 Name:           thunderbird
-Version:        7.0.1
-Release:        3%{?dist}.R
+Version:        9.0.1
+Release:        1%{?dist}.R
 URL:            http://www.mozilla.org/projects/thunderbird/
 License:        MPLv1.1 or GPLv2+ or LGPLv2+
 Group:          Applications/Internet
 %if %{official_branding}
-%define tarball thunderbird-%{version}.source.tar.bz2
+%define tarball ftp://ftp.mozilla.org/pub/thunderbird/releases/9.0.1/source/thunderbird-%{version}.source.tar.bz2
 %else
 %define tarball thunderbird-3.1rc1.source.tar.bz2
 %endif
-Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/7.0.1/source/thunderbird-%{version}.source.tar.bz2
+Source0:        %{tarball}
 %if %{build_langpacks}
-Source1:        thunderbird-langpacks-%{version}-20110930.tar.xz
+Source1:        thunderbird-langpacks-%{version}-20111222.tar.xz
 %endif
 Source10:       thunderbird-mozconfig
 Source11:       thunderbird-mozconfig-branded
@@ -58,9 +53,15 @@ Source100:      find-external-requires
 # Mozilla (XULRunner) patches
 Patch0:         thunderbird-install-dir.patch
 Patch7:         crashreporter-remove-static.patch
-Patch8:         xulrunner-6.0-secondary-ipc.patch
+Patch8:         xulrunner-9.0-secondary-ipc.patch
+Patch10:        xulrunner-2.0-network-link-service.patch
+Patch11:        xulrunner-2.0-NetworkManager09.patch
+Patch12:        mozilla-696393.patch
 
-Patch90:	thunderbird-7.0.1-cairo10.patch
+# Build patches
+
+# Linux specific
+Patch200:       thunderbird-8.0-enable-addons.patch
 
 %if %{official_branding}
 # Required by Mozilla Corporation
@@ -70,10 +71,7 @@ Patch90:	thunderbird-7.0.1-cairo10.patch
 
 %endif
 
-BuildRequires:  nspr-devel >= %{nspr_version}
-BuildRequires:  nss-devel >= %{nss_version}
-BuildRequires:  cairo10-devel >= %{cairo_version}
-BuildRequires:  libnotify-devel >= %{libnotify_version}
+BuildRequires:  libnotify-devel
 BuildRequires:  libpng-devel
 BuildRequires:  libjpeg-devel
 BuildRequires:  zip
@@ -90,7 +88,9 @@ BuildRequires:  freetype-devel >= %{freetype_version}
 BuildRequires:  libXt-devel
 BuildRequires:  libXrender-devel
 BuildRequires:  hunspell-devel
-#BuildRequires:  sqlite-devel >= %{sqlite_version}
+%if %{?system_sqlite}
+BuildRequires:  sqlite-devel >= %{sqlite_version}
+%endif
 BuildRequires:  startup-notification-devel
 BuildRequires:  alsa-lib-devel
 BuildRequires:  autoconf213
@@ -99,9 +99,9 @@ BuildRequires:  libcurl-devel
 BuildRequires:  yasm
 BuildRequires:  mesa-libGL-devel
 Requires:       mozilla-filesystem
-Requires:       nspr >= %{nspr_version}
-Requires:       nss >= %{nss_version}
+%if %{?system_sqlite}
 Requires:       sqlite >= %{sqlite_version}
+%endif
 
 AutoProv: 0
 %define _use_internal_dependency_generator 0
@@ -139,9 +139,12 @@ cd %{tarballdir}
 cd mozilla
 %patch7 -p2 -b .static
 %patch8 -p2 -b .secondary-ipc
+%patch10 -p1 -b .link-service
+%patch11 -p1 -b .NetworkManager09
+%patch12 -p2 -b .696393
 cd ..
 
-%patch90 -p1 -b .cairo10
+%patch200 -p1 -b .addons
 
 %if %{official_branding}
 # Required by Mozilla Corporation
@@ -158,6 +161,12 @@ cd ..
 %endif
 %if %{enable_mozilla_crashreporter}
 %{__cat} %{SOURCE13} >> .mozconfig
+%endif
+
+%if %{?system_sqlite}
+echo "ac_add_options --enable-system-sqlite"  >> .mozconfig
+%else
+echo "ac_add_options --disable-system-sqlite" >> .mozconfig
 %endif
 
 #===============================================================================
@@ -180,16 +189,17 @@ export CXXFLAGS=$MOZ_OPT_FLAGS
 export PREFIX='%{_prefix}'
 export LIBDIR='%{_libdir}'
 
-%define moz_make_flags -j1
-%ifarch ppc ppc64 s390 s390x
-%define moz_make_flags -j1
-%else
-%define moz_make_flags %{?_smp_mflags}
+MOZ_SMP_FLAGS=-j1
+# On x86 architectures, Mozilla can build up to 4 jobs at once in parallel,
+# however builds tend to fail on other arches when building in parallel.
+%ifarch %{ix86} x86_64
+[ -z "$RPM_BUILD_NCPUS" ] && \
+     RPM_BUILD_NCPUS="`/usr/bin/getconf _NPROCESSORS_ONLN`"
+[ "$RPM_BUILD_NCPUS" -ge 2 ] && MOZ_SMP_FLAGS=-j2
+[ "$RPM_BUILD_NCPUS" -ge 4 ] && MOZ_SMP_FLAGS=-j4
 %endif
 
-export LDFLAGS="-Wl,-rpath,%{mozappdir}"
-export MAKE="gmake %{moz_make_flags}"
-make -f client.mk build
+make -f client.mk build STRIP="/bin/true" MOZ_MAKE_FLAGS="$MOZ_SMP_FLAGS"
 
 # create debuginfo for crash-stats.mozilla.com
 %if %{enable_mozilla_crashreporter}
@@ -321,7 +331,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %{mozappdir}/thunderbird-bin
 %{mozappdir}/thunderbird
 %{mozappdir}/*.so
-%{mozappdir}/README.txt
 %{mozappdir}/platform.ini
 %{mozappdir}/application.ini
 %{mozappdir}/blocklist.xml
@@ -342,18 +351,38 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %exclude %{_includedir}/%{name}-%{version}
 %exclude %{_libdir}/%{name}-devel-%{version}
 %{mozappdir}/chrome.manifest
+%{mozappdir}/distribution/extensions
 
 #===============================================================================
 
 %changelog
-* Fri Oct 28 2011 Arkady L. Shane <ashejn@russianfedora.ru> - 7.0.1-3.R
-- rebuilt with system components
-- apply cairo10 patch
+* Mon Jan 16 2012 Arkady L. Shane <ashejn@russianfedora.ru> - 9.0.1-1.R
+- rebuilt without system nss, nspr, cairo and sqlite
 
-* Fri Oct 14 2011 Arkady L. Shane <ashejn@russianfedora.ru> - 7.0.1-2
-- bump release
+* Thu Dec 22 2011 Jan Horak <jhorak@redhat.com> - 9.0-4
+- Update to 9.0
 
-* Fri Sep 30 2011 Jan Horak <jhorak@redhat.com> - 7.0.1-1.R
+* Fri Dec 9 2011 Martin Stransky <stransky@redhat.com> - 8.0-4
+- enabled gio support (#760644)
+
+* Tue Nov 29 2011 Jan Horak <jhorak@redhat.com> - 8.0-3
+- Fixed s390x issues
+
+* Thu Nov 10 2011 Jan Horak <jhorak@redhat.com> - 8.0-2
+- Enable Mozilla's crash reporter again for all archs
+- Temporary workaround for langpacks
+- Disabled addon check UI (#753551)
+
+* Tue Nov  8 2011 Jan Horak <jhorak@redhat.com> - 8.0-1
+- Update to 8.0
+
+* Tue Oct 18 2011 Martin Stransky <stransky@redhat.com> - 7.0.1-3
+- Added NM patches (mozbz#627672, mozbz#639959)
+
+* Wed Oct 12 2011 Dan Horák <dan[at]danny.cz> - 7.0.1-2
+- fix build on secondary arches (copied from xulrunner)
+
+* Fri Sep 30 2011 Jan Horak <jhorak@redhat.com> - 7.0.1-1
 - Update to 7.0.1
 
 * Tue Sep 27 2011 Jan Horak <jhorak@redhat.com> - 7.0-1
