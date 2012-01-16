@@ -35,7 +35,7 @@ License:        MPLv1.1 or GPLv2+ or LGPLv2+
 Group:          Applications/Internet
 Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/9.0.1/source/thunderbird-%{version}.source.tar.bz2
 %if %{build_langpacks}
-Source1:        thunderbird-langpacks-%{version}-20111222.tar.xz
+Source1:        thunderbird-langpacks-9.0-20111222.tar.xz
 %endif
 Source10:       thunderbird-mozconfig
 Source11:       thunderbird-mozconfig-branded
