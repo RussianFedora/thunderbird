@@ -29,13 +29,13 @@
 Summary:        Mozilla Thunderbird mail/newsgroup client
 Name:           thunderbird
 Version:        9.0.1
-Release:        1%{?dist}.R
+Release:        2%{?dist}.R
 URL:            http://www.mozilla.org/projects/thunderbird/
 License:        MPLv1.1 or GPLv2+ or LGPLv2+
 Group:          Applications/Internet
 Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/9.0.1/source/thunderbird-%{version}.source.tar.bz2
 %if %{build_langpacks}
-Source1:        thunderbird-langpacks-9.0-20111222.tar.xz
+Source1:        thunderbird-langpacks-9.0.1-20111223.tar.xz
 %endif
 Source10:       thunderbird-mozconfig
 Source11:       thunderbird-mozconfig-branded
@@ -352,6 +352,9 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 #===============================================================================
 
 %changelog
+* Mon Jan 30 2012 Arkady L. Shane <ashejn@russianfedora.ru> - 9.0.1-2.R
+- update langpacks
+
 * Mon Jan 16 2012 Arkady L. Shane <ashejn@russianfedora.ru> - 9.0.1-1.R
 - rebuilt without system nss, nspr, cairo and sqlite
 
