@@ -18,24 +18,25 @@
 
 %define official_branding 1
 # enable crash reporter only for iX86
-%ifarch %{ix86} x86_64
-%define enable_mozilla_crashreporter 1
-%else
 %define enable_mozilla_crashreporter 0
-%endif
 
 %define mozappdir         %{_libdir}/%{name}
 
 Summary:        Mozilla Thunderbird mail/newsgroup client
 Name:           thunderbird
-Version:        9.0.1
-Release:        2%{?dist}.R
+Version:        10.0
+Release:        1%{?dist}.R
 URL:            http://www.mozilla.org/projects/thunderbird/
 License:        MPLv1.1 or GPLv2+ or LGPLv2+
 Group:          Applications/Internet
-Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/9.0.1/source/thunderbird-%{version}.source.tar.bz2
+%if %{official_branding}
+%define tarball thunderbird-%{version}.source.tar.bz2
+%else
+%define tarball thunderbird-3.1rc1.source.tar.bz2
+%endif
+Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/10.0-real/source/%{tarball}
 %if %{build_langpacks}
-Source1:        thunderbird-langpacks-9.0.1-20111223.tar.xz
+Source1:        thunderbird-langpacks-%{version}-20120131.tar.xz
 %endif
 Source10:       thunderbird-mozconfig
 Source11:       thunderbird-mozconfig-branded
@@ -48,12 +49,9 @@ Source100:      find-external-requires
 # Mozilla (XULRunner) patches
 Patch0:         thunderbird-install-dir.patch
 Patch7:         crashreporter-remove-static.patch
-Patch8:         xulrunner-9.0-secondary-ipc.patch
-Patch10:        xulrunner-2.0-network-link-service.patch
-Patch11:        xulrunner-2.0-NetworkManager09.patch
-Patch12:        mozilla-696393.patch
-
-# Build patches
+Patch8:         xulrunner-10.0-secondary-ipc.patch
+# # cherry-picked from 13afcd4c097c
+Patch13:        xulrunner-9.0-secondary-build-fix.patch
 
 # Linux specific
 Patch200:       thunderbird-8.0-enable-addons.patch
@@ -94,9 +92,6 @@ BuildRequires:  libcurl-devel
 BuildRequires:  yasm
 BuildRequires:  mesa-libGL-devel
 Requires:       mozilla-filesystem
-%if %{?system_sqlite}
-Requires:       sqlite >= %{sqlite_version}
-%endif
 
 AutoProv: 0
 %define _use_internal_dependency_generator 0
@@ -133,10 +128,8 @@ cd %{tarballdir}
 # Mozilla (XULRunner) patches
 cd mozilla
 %patch7 -p2 -b .static
-%patch8 -p2 -b .secondary-ipc
-%patch10 -p1 -b .link-service
-%patch11 -p1 -b .NetworkManager09
-%patch12 -p2 -b .696393
+%patch8 -p3 -b .secondary-ipc
+%patch13 -p2 -b .secondary-build
 cd ..
 
 %patch200 -p1 -b .addons
@@ -156,6 +149,11 @@ cd ..
 %endif
 %if %{enable_mozilla_crashreporter}
 %{__cat} %{SOURCE13} >> .mozconfig
+%endif
+
+# s390(x) fails to start with jemalloc enabled
+%ifarch s390 s390x
+echo "ac_add_options --disable-jemalloc" >> .mozconfig
 %endif
 
 %if %{?system_sqlite}
@@ -279,6 +277,8 @@ touch $RPM_BUILD_ROOT%{mozappdir}/components/xpti.dat
 %{__cp} mozilla/dist/%{symbols_file_name} $RPM_BUILD_ROOT/%{moz_debug_dir}
 %endif
 
+rm -f $RPM_BUILD_ROOT%{mozappdir}/*.chk
+
 #===============================================================================
 
 %post
@@ -312,7 +312,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %{mozappdir}/components/binary.manifest
 %{mozappdir}/components/libdbusservice.so
 %{mozappdir}/components/libmozgnome.so
-%{mozappdir}/omni.jar
+%{mozappdir}/omni.ja
 %{mozappdir}/plugin-container
 %{mozappdir}/defaults
 %{mozappdir}/dictionaries
@@ -336,7 +336,6 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %{_datadir}/icons/hicolor/256x256/apps/thunderbird.png
 %{_datadir}/icons/hicolor/32x32/apps/thunderbird.png
 %{_datadir}/icons/hicolor/48x48/apps/thunderbird.png
-%{mozappdir}/hyphenation
 %if %{enable_mozilla_crashreporter}
 %{mozappdir}/crashreporter
 %{mozappdir}/crashreporter.ini
@@ -346,17 +345,25 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %exclude %{_includedir}/%{name}-%{version}
 %exclude %{_libdir}/%{name}-devel-%{version}
 %{mozappdir}/chrome.manifest
-%{mozappdir}/distribution/extensions
-%{mozappdir}/lib*chk
+%{mozappdir}/searchplugins
 
 #===============================================================================
 
 %changelog
-* Mon Jan 30 2012 Arkady L. Shane <ashejn@russianfedora.ru> - 9.0.1-2.R
-- update langpacks
+* Wed Feb  1 2012 Arkady L. Shane <ashejn@russianfedora.ru> - 10.0-1.R
+- rebuilt for EL6
 
-* Mon Jan 16 2012 Arkady L. Shane <ashejn@russianfedora.ru> - 9.0.1-1.R
-- rebuilt without system nss, nspr, cairo and sqlite
+* Tue Jan 31 2012 Jan Horak <jhorak@redhat.com> - 10.0-1
+- Update to 10.0
+
+* Sat Jan 14 2012 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 9.0-7
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_17_Mass_Rebuild
+
+* Thu Jan 05 2012 Dan Horák <dan[at]danny.cz> - 9.0-6
+- disable jemalloc on s390(x) (taken from xulrunner)
+
+* Wed Jan 04 2012 Dan Horák <dan[at]danny.cz> - 9.0-5
+- fix build on secondary arches (cherry-picked from 13afcd4c097c)
 
 * Thu Dec 22 2011 Jan Horak <jhorak@redhat.com> - 9.0-4
 - Update to 9.0
