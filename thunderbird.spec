@@ -29,12 +29,7 @@ Release:        1%{?dist}.R
 URL:            http://www.mozilla.org/projects/thunderbird/
 License:        MPLv1.1 or GPLv2+ or LGPLv2+
 Group:          Applications/Internet
-%if %{official_branding}
-%define tarball thunderbird-%{version}.source.tar.bz2
-%else
-%define tarball thunderbird-3.1rc1.source.tar.bz2
-%endif
-Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/10.0-real/source/%{tarball}
+Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/10.0-real/source/thunderbird-%{version}.source.tar.bz2
 %if %{build_langpacks}
 Source1:        thunderbird-langpacks-%{version}-20120131.tar.xz
 %endif
