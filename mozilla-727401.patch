@@ -1,0 +1,38 @@
+# HG changeset patch
+# User Benjamin Smedberg <benjamin@smedbergs.us>
+# Date 1329314881 18000
+# Node ID 355163c56ea5ad5037ac6da754252aaea67d2217
+# Parent  81f6b9cbb2a92ac08d1ccc0c1b44d6a5c28f6e2a
+Bug 727401 - import libpng overflow patch from http://codereview.chromium.org/9363013
+
+diff --git a/media/libpng/pngrutil.c b/media/libpng/pngrutil.c
+--- a/media/libpng/pngrutil.c
++++ b/media/libpng/pngrutil.c
+@@ -396,18 +396,25 @@ png_decompress_chunk(png_structp png_ptr
+ #if defined(PNG_SET_CHUNK_MALLOC_LIMIT_SUPPORTED) || \
+     defined(PNG_USER_CHUNK_MALLOC_MAX)
+       else
+ #endif
+       if (expanded_size > 0)
+       {
+          /* Success (maybe) - really uncompress the chunk. */
+          png_size_t new_size = 0;
+-         png_charp text = png_malloc_warn(png_ptr,
+-                        prefix_size + expanded_size + 1);
++         png_charp text = NULL;
++         /* Need to check for both truncation (64-bit platforms) and integer
++          * overflow.
++          */
++         if (prefix_size + expanded_size > prefix_size &&
++             prefix_size + expanded_size < 0xffffffffU)
++         {
++            text = png_malloc_warn(png_ptr, prefix_size + expanded_size + 1);
++         }
+ 
+          if (text != NULL)
+          {
+             png_memcpy(text, png_ptr->chunkdata, prefix_size);
+             new_size = png_inflate(png_ptr,
+                 (png_bytep)(png_ptr->chunkdata + prefix_size),
+                 chunklength - prefix_size,
+                 (png_bytep)(text + prefix_size), expanded_size);

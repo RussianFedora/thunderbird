@@ -29,7 +29,7 @@ Release:        1%{?dist}.R
 URL:            http://www.mozilla.org/projects/thunderbird/
 License:        MPLv1.1 or GPLv2+ or LGPLv2+
 Group:          Applications/Internet
-Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/10.0-real/source/thunderbird-%{version}.source.tar.bz2
+Source0:        ftp://ftp.mozilla.org/pub/thunderbird/releases/10.0.1/source/thunderbird-%{version}.source.tar.bz2
 %if %{build_langpacks}
 Source1:        thunderbird-langpacks-%{version}-20120209.tar.xz
 %endif
@@ -47,6 +47,7 @@ Patch7:         crashreporter-remove-static.patch
 Patch8:         xulrunner-10.0-secondary-ipc.patch
 # # cherry-picked from 13afcd4c097c
 Patch13:        xulrunner-9.0-secondary-build-fix.patch
+Patch14:        mozilla-727401.patch
 
 # Linux specific
 Patch200:       thunderbird-8.0-enable-addons.patch
@@ -125,6 +126,7 @@ cd mozilla
 %patch7 -p2 -b .static
 %patch8 -p3 -b .secondary-ipc
 %patch13 -p2 -b .secondary-build
+%patch14 -p1 -b .727401
 cd ..
 
 %patch200 -p1 -b .addons
@@ -347,6 +349,7 @@ gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
 %changelog
 * Sun Feb 12 2012 Arkady L. Shane <ashejn@russianfedora.ru> - 10.0.1-1.R
 - update to 10.0.1
+- fix mozilla #727401
 
 * Wed Feb  1 2012 Arkady L. Shane <ashejn@russianfedora.ru> - 10.0-1.R
 - rebuilt for EL6
